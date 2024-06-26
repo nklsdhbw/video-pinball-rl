@@ -22,25 +22,25 @@ The action space for Atari Video Pinball consists of 9 discrete actions:
 
   
 
-1. NOOP: No operation
+	1. NOOP: No operation
 
-2. FIRE: Fire the ball
+	2. FIRE: Fire the ball
 
-3. UP: Move up
+	3. UP: Move up
 
-4. RIGHT: Move right
+	4. RIGHT: Move right
 
-5. LEFT: Move left
+	5. LEFT: Move left
 
-6. DOWN: Move down
+	6. DOWN: Move down
 
-7. UPRIGHT: Move up and right
+	7. UPRIGHT: Move up and right
 
-8. UPLEFT: Move up and left
+	8. UPLEFT: Move up and left
 
-9. DOWNRIGHT: Move down and right
+	9. DOWNRIGHT: Move down and right
 
-10. DOWNLEFT: Move down and left
+	10. DOWNLEFT: Move down and left
 
   
 
@@ -112,7 +112,7 @@ $L(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( y - Q(s, a; \theta) \right)^
 
 Where:
 
--$y = r + \gamma \max_{a'} Q(s', a'; \theta^{-})$ is the target Q-value.
+- $y = r + \gamma \max_{a'} Q(s', a'; \theta^{-})$ is the target Q-value.
 
 - $\theta$ are the parameters of the policy network.
 
