@@ -5,9 +5,11 @@ from dqn import DQN
 import numpy as np
 from itertools import count
 import os
+from typing import List, Optional, Tuple
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def main():
+def main() -> None:
     files = os.listdir()
     if "dqn_model.pth" not in files:
         print("Model not found. Please train the model first via 'python train.py'")
@@ -17,7 +19,7 @@ def main():
         print("Create an environment and agent...")
         env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
         agent = DQNAgent(env=env)
-        print("Environment and agent sucessfully created")
+        print("Environment and agent successfully created")
         
         # Load the trained model
         print("Load the trained model...")
@@ -25,7 +27,7 @@ def main():
         agent.policy_net.eval()
         
         num_episodes = 10
-        scores = []
+        scores: List[float] = []
         print(f"Start testing the model over {num_episodes} episodes...")
         for episode in range(num_episodes):
             state, _ = env.reset()
@@ -33,7 +35,7 @@ def main():
             state = np.stack([state] * 4, axis=0)  # Stack 4 frames for the initial state
             state = torch.from_numpy(state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
 
-            total_reward = 0
+            total_reward = 0.0
 
             for t in count():
                 action = agent.select_action(state=state)

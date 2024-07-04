@@ -2,7 +2,7 @@ import gymnasium as gym
 import torch
 from agent import DQNAgent
 
-def train_model():
+def train_model() -> None:
     env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
     agent = DQNAgent(env=env)
     
