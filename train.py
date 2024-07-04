@@ -3,13 +3,13 @@ import torch
 from agent import DQNAgent
 
 def train_model():
-    env = gym.make("ALE/VideoPinball-v5", render_mode="human")
+    env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
     agent = DQNAgent(env=env)
     
     if torch.cuda.is_available():
-        num_episodes = 600
+        num_episodes = 10
     else:
-        num_episodes = 50
+        num_episodes = 1
     
     agent.train(num_episodes=num_episodes)
     

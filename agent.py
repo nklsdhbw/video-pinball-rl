@@ -24,6 +24,7 @@ MEMORY_SIZE = 10000
 class DQNAgent:
     def __init__(self, env):
         self.env = env
+        self.render_mode = env.render_mode
         self.n_actions = env.action_space.n
         self.init_screen = env.reset()[0]
         self.screen_height, self.screen_width = self.preprocess_frame(frame=self.init_screen).shape
@@ -40,6 +41,7 @@ class DQNAgent:
         self.episode_durations = []
 
     def preprocess_frame(self, frame):
+        # Convert to grayscale and resize
         frame = cv2.cvtColor(src=frame, code=cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(src=frame, dsize=(84, 84))
         frame = frame / 255.0
@@ -109,6 +111,7 @@ class DQNAgent:
 
     def train(self, num_episodes):
         for i_episode in range(num_episodes):
+            print(f"Start Training episode {i_episode+1}/{num_episodes}")
             state, _ = self.env.reset()
             state = self.preprocess_frame(frame=state)
             state = np.stack([state] * 4, axis=0)  # Stack 4 frames for the initial state
@@ -137,8 +140,52 @@ class DQNAgent:
                     self.episode_durations.append(t + 1)
                     self.plot_durations()
                     break
-
+            print(f"End Training episode {i_episode+1}/{num_episodes}")
         print('Complete')
+        
         self.plot_durations(show_result=True)
         plt.ioff()
         plt.show()
+
+def main():
+    env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
+    agent = DQNAgent(env=env)
+    
+    num_episodes = 10
+    scores = []
+
+    for episode in range(num_episodes):
+        state, _ = env.reset()
+        state = agent.preprocess_frame(state)
+        state = np.stack([state] * 4, axis=0)  # Stack 4 frames for the initial state
+        state = torch.from_numpy(state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
+
+        total_reward = 0
+
+        for t in count():
+            action = agent.select_action(state=state)
+            observation, reward, terminated, truncated, _ = env.step(action=action.item())
+            reward = torch.tensor(data=[reward], device=device)
+            total_reward += reward.item()
+            done = terminated or truncated
+
+            if not done:
+                next_frame = agent.preprocess_frame(observation)
+                next_state = np.append(state.cpu().numpy()[0, 1:], np.expand_dims(next_frame, axis=0), axis=0)
+                next_state = torch.from_numpy(next_state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
+            else:
+                next_state = None
+
+            state = next_state
+
+            if done:
+                break
+
+        scores.append(total_reward)
+        print(f"Episode {episode + 1}: Score = {total_reward}")
+
+    average_score = np.mean(scores)
+    print(f"Average score over {num_episodes} episodes: {average_score}")
+
+if __name__ == "__main__":
+    main()
