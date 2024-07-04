@@ -8,6 +8,7 @@ import torch.nn as nn
 from itertools import count
 import matplotlib.pyplot as plt
 from dqn import DQN, ReplayMemory, Transition
+import gymnasium as gym
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
