@@ -9,6 +9,7 @@ from itertools import count
 import matplotlib.pyplot as plt
 from dqn import DQN, ReplayMemory, Transition
 import gymnasium as gym
+from typing import Optional
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -23,7 +24,7 @@ LR = 1e-4
 MEMORY_SIZE = 10000
 
 class DQNAgent:
-    def __init__(self, env):
+    def __init__(self, env: gym.Env) -> None:
         self.env = env
         self.render_mode = env.render_mode
         self.n_actions = env.action_space.n
@@ -41,14 +42,14 @@ class DQNAgent:
         self.steps_done = 0
         self.episode_durations = []
 
-    def preprocess_frame(self, frame):
+    def preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
         # Convert to grayscale and resize
         frame = cv2.cvtColor(src=frame, code=cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(src=frame, dsize=(84, 84))
         frame = frame / 255.0
         return frame
 
-    def select_action(self, state):
+    def select_action(self, state: torch.Tensor) -> torch.Tensor:
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * self.steps_done / EPS_DECAY)
         self.steps_done += 1
@@ -58,7 +59,7 @@ class DQNAgent:
         else:
             return torch.tensor([[random.randrange(self.n_actions)]], device=device, dtype=torch.long)
 
-    def optimize_model(self):
+    def optimize_model(self) -> None:
         if len(self.memory) < BATCH_SIZE:
             return
         transitions = self.memory.sample(batch_size=BATCH_SIZE)
@@ -85,14 +86,14 @@ class DQNAgent:
         torch.nn.utils.clip_grad_value_(parameters=self.policy_net.parameters(), clip_value=100)
         self.optimizer.step()
 
-    def update_target_network(self):
+    def update_target_network(self) -> None:
         target_net_state_dict = self.target_net.state_dict()
         policy_net_state_dict = self.policy_net.state_dict()
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key] * TAU + target_net_state_dict[key] * (1 - TAU)
         self.target_net.load_state_dict(state_dict=target_net_state_dict)
 
-    def plot_durations(self, show_result=False):
+    def plot_durations(self, show_result: bool = False) -> None:
         plt.figure(1)
         durations_t = torch.tensor(data=self.episode_durations, dtype=torch.float)
         if show_result:
@@ -110,83 +111,48 @@ class DQNAgent:
 
         plt.pause(interval=0.001)
 
-    def train(self, num_episodes):
-        for i_episode in range(num_episodes):
-            print(f"Start Training episode {i_episode+1}/{num_episodes}")
-            state, _ = self.env.reset()
-            state = self.preprocess_frame(frame=state)
-            state = np.stack([state] * 4, axis=0)  # Stack 4 frames for the initial state
-            state = torch.from_numpy(state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
-
-            for t in count():
-                action = self.select_action(state=state)
-                observation, reward, terminated, truncated, _ = self.env.step(action=action.item())
-                reward = torch.tensor(data=[reward], device=device)
-                done = terminated or truncated
-
-                if not done:
-                    next_frame = self.preprocess_frame(frame=observation)
-                    next_state = np.append(state.cpu().numpy()[0, 1:], np.expand_dims(next_frame, axis=0), axis=0)
-                    next_state = torch.from_numpy(next_state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
-                else:
-                    next_state = None
-
-                self.memory.push(state, action, next_state, reward)
-                state = next_state
-                self.optimize_model()
-
-                self.update_target_network()
-
-                if done:
-                    self.episode_durations.append(t + 1)
-                    self.plot_durations()
-                    break
-            print(f"End Training episode {i_episode+1}/{num_episodes}")
-        print('Complete')
-        
-        self.plot_durations(show_result=True)
-        plt.ioff()
-        plt.show()
-
-def main():
-    env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
-    agent = DQNAgent(env=env)
-    
-    num_episodes = 10
-    scores = []
-
-    for episode in range(num_episodes):
-        state, _ = env.reset()
-        state = agent.preprocess_frame(state)
+    def run_episode(self, training: bool = True) -> float:
+        state, _ = self.env.reset()
+        state = self.preprocess_frame(frame=state)
         state = np.stack([state] * 4, axis=0)  # Stack 4 frames for the initial state
         state = torch.from_numpy(state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
 
-        total_reward = 0
-
+        total_reward = 0.0
         for t in count():
-            action = agent.select_action(state=state)
-            observation, reward, terminated, truncated, _ = env.step(action=action.item())
+            action = self.select_action(state=state)
+            observation, reward, terminated, truncated, _ = self.env.step(action=action.item())
             reward = torch.tensor(data=[reward], device=device)
             total_reward += reward.item()
             done = terminated or truncated
 
             if not done:
-                next_frame = agent.preprocess_frame(observation)
+                next_frame = self.preprocess_frame(frame=observation)
                 next_state = np.append(state.cpu().numpy()[0, 1:], np.expand_dims(next_frame, axis=0), axis=0)
                 next_state = torch.from_numpy(next_state).unsqueeze(dim=0).to(device=device, dtype=torch.float32)
             else:
                 next_state = None
 
+            if training:
+                self.memory.push(state, action, next_state, reward)
+                self.optimize_model()
+                self.update_target_network()
+
             state = next_state
 
             if done:
+                if training:
+                    self.episode_durations.append(t + 1)
+                    self.plot_durations()
                 break
 
-        scores.append(total_reward)
-        print(f"Episode {episode + 1}: Score = {total_reward}")
+        return total_reward
 
-    average_score = np.mean(scores)
-    print(f"Average score over {num_episodes} episodes: {average_score}")
-
-if __name__ == "__main__":
-    main()
+    def train(self, num_episodes: int) -> None:
+        for i_episode in range(num_episodes):
+            print(f"Start Training episode {i_episode + 1}/{num_episodes}")
+            self.run_episode(training=True)
+            print(f"End Training episode {i_episode + 1}/{num_episodes}")
+        print('Complete')
+        self.plot_durations(show_result=True)
+        plt.ioff()
+        plt.show()
