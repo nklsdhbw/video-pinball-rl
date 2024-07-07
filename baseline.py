@@ -1,7 +1,8 @@
 import gymnasium as gym
 import numpy as np
+from typing import Tuple
 
-def run_baseline():
+def run_baseline(num_episodes=3) -> Tuple[int, float]:
     env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
     num_episodes = 3
     scores = []
@@ -51,6 +52,6 @@ def run_baseline():
     average_score = np.mean(scores)
     print(scores)
     print(f"Average score over {num_episodes} episodes: {average_score}")
-
+    return num_episodes, average_score
 if __name__ == "__main__":
     run_baseline()

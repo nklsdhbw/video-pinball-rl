@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def main() -> None:
+def finalModels(num_episodes) -> None:
     files = os.listdir()
     if "dqn_model.pth" not in files:
         print("Model not found. Please train the model first via 'python train.py'")
@@ -26,7 +26,6 @@ def main() -> None:
         agent.policy_net.load_state_dict(torch.load("dqn_model.pth", map_location=torch.device('cpu')))
         agent.policy_net.eval()
         
-        num_episodes = 10
         scores: List[float] = []
         print(f"Start testing the model over {num_episodes} episodes...")
         for episode in range(num_episodes):
@@ -63,6 +62,6 @@ def main() -> None:
         average_score = np.mean(scores)
         print(f"Average score over {num_episodes} episodes: {average_score}")
         print("Exiting...")
-
+        return num_episodes, average_score
 if __name__ == "__main__":
-    main()
+    finalModels()
