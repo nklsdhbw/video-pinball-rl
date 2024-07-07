@@ -41,6 +41,9 @@ class DQNAgent:
         
         self.steps_done = 0
         self.episode_durations = []
+        self.episode_rewards = []
+        self.losses = []
+        self.epsilons = []
 
     def preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
         # Convert to grayscale and resize
@@ -53,6 +56,7 @@ class DQNAgent:
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * self.steps_done / EPS_DECAY)
         self.steps_done += 1
+        self.epsilons.append(eps_threshold)
         if sample > eps_threshold:
             with torch.no_grad():
                 return self.policy_net(state).max(dim=1)[1].view(1, 1)
@@ -85,6 +89,8 @@ class DQNAgent:
         loss.backward()
         torch.nn.utils.clip_grad_value_(parameters=self.policy_net.parameters(), clip_value=100)
         self.optimizer.step()
+        
+        self.losses.append(loss.item())
 
     def update_target_network(self) -> None:
         target_net_state_dict = self.target_net.state_dict()
@@ -93,23 +99,56 @@ class DQNAgent:
             target_net_state_dict[key] = policy_net_state_dict[key] * TAU + target_net_state_dict[key] * (1 - TAU)
         self.target_net.load_state_dict(state_dict=target_net_state_dict)
 
-    def plot_durations(self, show_result: bool = False) -> None:
-        plt.figure(1)
+    def plot_metrics(self, show_result: bool = False) -> None:
+        episodes = list(range(1, len(self.episode_durations) + 1))
+
+        # Plot Episode Durations
+        plt.figure()
+        plt.title('Episode Duration')
         durations_t = torch.tensor(data=self.episode_durations, dtype=torch.float)
-        if show_result:
-            plt.title('Result')
-        else:
-            plt.clf()
-            plt.title('Training...')
         plt.xlabel('Episode')
         plt.ylabel('Duration')
-        plt.plot(durations_t.numpy())
+        plt.plot(episodes, durations_t.numpy())
+        plt.xticks(episodes)  # Set x-ticks to episode numbers
         if len(durations_t) >= 100:
             means = durations_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
             means = torch.cat((torch.zeros(99), means))
-            plt.plot(means.numpy())
+            plt.plot(episodes, means.numpy())
+        plt.savefig('episode_duration.png')
+        plt.show()
 
-        plt.pause(interval=0.001)
+        # Plot Episode Rewards
+        plt.figure()
+        plt.title('Episode Reward')
+        rewards_t = torch.tensor(data=self.episode_rewards, dtype=torch.float)
+        plt.xlabel('Episode')
+        plt.ylabel('Reward')
+        plt.plot(episodes, rewards_t.numpy())
+        plt.xticks(episodes)  # Set x-ticks to episode numbers
+        if len(rewards_t) >= 100:
+            means = rewards_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
+            means = torch.cat((torch.zeros(99), means))
+            plt.plot(episodes, means.numpy())
+        plt.savefig('episode_reward.png')
+        plt.show()
+
+        # Plot Losses
+        plt.figure()
+        plt.title('Loss')
+        plt.xlabel('Optimization Step')
+        plt.ylabel('Loss')
+        plt.plot(self.losses)
+        plt.savefig('loss.png')
+        plt.show()
+
+        # Plot Epsilon Decay
+        plt.figure()
+        plt.title('Epsilon Decay')
+        plt.xlabel('Step')
+        plt.ylabel('Epsilon')
+        plt.plot(self.epsilons)
+        plt.savefig('epsilon_decay.png')
+        plt.show()
 
     def run_episode(self, training: bool = True) -> float:
         state, _ = self.env.reset()
@@ -142,17 +181,16 @@ class DQNAgent:
             if done:
                 if training:
                     self.episode_durations.append(t + 1)
-                    self.plot_durations()
+                    self.episode_rewards.append(total_reward)
                 break
 
         return total_reward
 
     def train(self, num_episodes: int) -> None:
-        for i_episode in range(num_episodes):
-            print(f"Start Training episode {i_episode + 1}/{num_episodes}")
+        for i_episode in range(1, num_episodes + 1):
+            print(f"Start Training episode {i_episode}/{num_episodes}")
             self.run_episode(training=True)
-            print(f"End Training episode {i_episode + 1}/{num_episodes}")
+            print(f"End Training episode {i_episode}/{num_episodes}")
         print('Complete')
-        self.plot_durations(show_result=True)
+        self.plot_metrics(show_result=True)
         plt.ioff()
-        plt.show()
