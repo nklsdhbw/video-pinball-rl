@@ -2,12 +2,12 @@ import gymnasium as gym
 import numpy as np
 from typing import Tuple
 
-def run_baseline(num_episodes=3) -> Tuple[int, float]:
+def run_baseline(num_epochs=3) -> Tuple[int, float]:
     env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
-    num_episodes = 3
+    num_epochs = 3
     scores = []
 
-    for episode in range(num_episodes):
+    for epoch in range(num_epochs):
         obs, info = env.reset()
         done = False
         counter = 0
@@ -51,7 +51,7 @@ def run_baseline(num_episodes=3) -> Tuple[int, float]:
     env.close()
     average_score = np.mean(scores)
     print(scores)
-    print(f"Average score over {num_episodes} episodes: {average_score}")
-    return num_episodes, average_score
+    print(f"Average score over {num_epochs} epochs: {average_score}")
+    return num_epochs, average_score
 if __name__ == "__main__":
     run_baseline()

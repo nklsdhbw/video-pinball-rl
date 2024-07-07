@@ -40,8 +40,8 @@ class DQNAgent:
         self.memory = ReplayMemory(capacity=MEMORY_SIZE)
         
         self.steps_done = 0
-        self.episode_durations = []
-        self.episode_rewards = []
+        self.epoch_durations = []
+        self.epoch_rewards = []
         self.losses = []
         self.epsilons = []
 
@@ -100,36 +100,36 @@ class DQNAgent:
         self.target_net.load_state_dict(state_dict=target_net_state_dict)
 
     def plot_metrics(self, show_result: bool = False) -> None:
-        episodes = list(range(1, len(self.episode_durations) + 1))
+        epochs = list(range(1, len(self.epoch_durations) + 1))
 
-        # Plot Episode Durations
+        # Plot epoch Durations
         plt.figure()
-        plt.title('Episode Duration')
-        durations_t = torch.tensor(data=self.episode_durations, dtype=torch.float)
-        plt.xlabel('Episode')
+        plt.title('Epoch Duration')
+        durations_t = torch.tensor(data=self.epoch_durations, dtype=torch.float)
+        plt.xlabel('Epoch')
         plt.ylabel('Duration')
-        plt.plot(episodes, durations_t.numpy())
-        plt.xticks(episodes)  # Set x-ticks to episode numbers
+        plt.plot(epochs, durations_t.numpy())
+        plt.xticks(epochs)  # Set x-ticks to epoch numbers
         if len(durations_t) >= 100:
             means = durations_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
             means = torch.cat((torch.zeros(99), means))
-            plt.plot(episodes, means.numpy())
-        plt.savefig('episode_duration.png')
+            plt.plot(epochs, means.numpy())
+        plt.savefig('epoch_duration.png')
         plt.show()
 
-        # Plot Episode Rewards
+        # Plot epoch Rewards
         plt.figure()
-        plt.title('Episode Reward')
-        rewards_t = torch.tensor(data=self.episode_rewards, dtype=torch.float)
-        plt.xlabel('Episode')
+        plt.title('Epoch Reward')
+        rewards_t = torch.tensor(data=self.epoch_rewards, dtype=torch.float)
+        plt.xlabel('Epoch')
         plt.ylabel('Reward')
-        plt.plot(episodes, rewards_t.numpy())
-        plt.xticks(episodes)  # Set x-ticks to episode numbers
+        plt.plot(epochs, rewards_t.numpy())
+        plt.xticks(epochs)  # Set x-ticks to epoch numbers
         if len(rewards_t) >= 100:
             means = rewards_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
             means = torch.cat((torch.zeros(99), means))
-            plt.plot(episodes, means.numpy())
-        plt.savefig('episode_reward.png')
+            plt.plot(epochs, means.numpy())
+        plt.savefig('epoch_reward.png')
         plt.show()
 
         # Plot Losses
@@ -150,7 +150,7 @@ class DQNAgent:
         plt.savefig('epsilon_decay.png')
         plt.show()
 
-    def run_episode(self, training: bool = True) -> float:
+    def run_epoch(self, training: bool = True) -> float:
         state, _ = self.env.reset()
         state = self.preprocess_frame(frame=state)
         state = np.stack([state] * 4, axis=0)  # Stack 4 frames for the initial state
@@ -180,17 +180,17 @@ class DQNAgent:
 
             if done:
                 if training:
-                    self.episode_durations.append(t + 1)
-                    self.episode_rewards.append(total_reward)
+                    self.epoch_durations.append(t + 1)
+                    self.epoch_rewards.append(total_reward)
                 break
 
         return total_reward
 
-    def train(self, num_episodes: int) -> None:
-        for i_episode in range(1, num_episodes + 1):
-            print(f"Start Training episode {i_episode}/{num_episodes}")
-            self.run_episode(training=True)
-            print(f"End Training episode {i_episode}/{num_episodes}")
+    def train(self, num_epochs: int) -> None:
+        for i_epoch in range(1, num_epochs + 1):
+            print(f"Start Training epoch {i_epoch}/{num_epochs}")
+            self.run_epoch(training=True)
+            print(f"End Training epoch {i_epoch}/{num_epochs}")
         print('Complete')
         self.plot_metrics(show_result=True)
         plt.ioff()

@@ -7,11 +7,11 @@ def train_model() -> None:
     agent = DQNAgent(env=env)
     
     if torch.cuda.is_available():
-        num_episodes = 10
+        num_epochs = 10
     else:
-        num_episodes = 1
+        num_epochs = 1
     
-    agent.train(num_episodes=num_episodes)
+    agent.train(num_epochs=num_epochs)
     
     # Save the trained model
     torch.save(agent.policy_net.state_dict(), "dqn_model.pth")
