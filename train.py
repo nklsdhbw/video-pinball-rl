@@ -7,9 +7,9 @@ def train_model() -> None:
     agent = DQNAgent(env=env)
     
     if torch.cuda.is_available():
-        num_epochs = 10
+        num_epochs = 500
     else:
-        num_epochs = 1
+        num_epochs = 10
     
     agent.train(num_epochs=num_epochs)
     

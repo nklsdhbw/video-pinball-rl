@@ -1,3 +1,5 @@
+import csv
+import os
 import math
 import random
 import cv2
@@ -11,8 +13,6 @@ from dqn import DQN, ReplayMemory, Transition
 import gymnasium as gym
 from typing import Optional
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 # Hyperparameters
 BATCH_SIZE = 128
 GAMMA = 0.99
@@ -22,6 +22,10 @@ EPS_DECAY = 1000
 TAU = 0.005
 LR = 1e-4
 MEMORY_SIZE = 10000
+
+PATH = "."
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class DQNAgent:
     def __init__(self, env: gym.Env) -> None:
@@ -44,6 +48,40 @@ class DQNAgent:
         self.epoch_rewards = []
         self.losses = []
         self.epsilons = []
+
+        # Create directories if not exist
+        os.makedirs(PATH, exist_ok=True)
+        self.metrics_files = {
+            'durations': f'{PATH}/epoch_durations.csv',
+            'rewards': f'{PATH}/epoch_rewards.csv',
+            'losses': f'{PATH}/losses.csv',
+            'epsilons': f'{PATH}/epsilons.csv'
+        }
+        self.initialize_metrics_files()
+
+    def initialize_metrics_files(self) -> None:
+        for metric, filepath in self.metrics_files.items():
+            if not os.path.exists(filepath):
+                with open(filepath, 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([metric])
+
+    def save_metrics(self) -> None:
+        with open(self.metrics_files['durations'], 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(self.epoch_durations[-1:])
+
+        with open(self.metrics_files['rewards'], 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(self.epoch_rewards[-1:])
+
+        with open(self.metrics_files['losses'], 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(self.losses[-1:])
+
+        with open(self.metrics_files['epsilons'], 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(self.epsilons[-1:])
 
     def preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
         # Convert to grayscale and resize
@@ -114,7 +152,7 @@ class DQNAgent:
             means = durations_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
             means = torch.cat((torch.zeros(99), means))
             plt.plot(epochs, means.numpy())
-        plt.savefig('epoch_duration.png')
+        plt.savefig(f'{PATH}/epoch_duration.svg')
         plt.show()
 
         # Plot epoch Rewards
@@ -129,7 +167,7 @@ class DQNAgent:
             means = rewards_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
             means = torch.cat((torch.zeros(99), means))
             plt.plot(epochs, means.numpy())
-        plt.savefig('epoch_reward.png')
+        plt.savefig(f'{PATH}/epoch_reward.svg')
         plt.show()
 
         # Plot Losses
@@ -138,7 +176,7 @@ class DQNAgent:
         plt.xlabel('Optimization Step')
         plt.ylabel('Loss')
         plt.plot(self.losses)
-        plt.savefig('loss.png')
+        plt.savefig(f'{PATH}/loss.svg')
         plt.show()
 
         # Plot Epsilon Decay
@@ -147,7 +185,7 @@ class DQNAgent:
         plt.xlabel('Step')
         plt.ylabel('Epsilon')
         plt.plot(self.epsilons)
-        plt.savefig('epsilon_decay.png')
+        plt.savefig(f'{PATH}/epsilon_decay.svg')
         plt.show()
 
     def run_epoch(self, training: bool = True) -> float:
@@ -182,6 +220,7 @@ class DQNAgent:
                 if training:
                     self.epoch_durations.append(t + 1)
                     self.epoch_rewards.append(total_reward)
+                    self.save_metrics()
                 break
 
         return total_reward
