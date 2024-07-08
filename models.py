@@ -1,5 +1,8 @@
 import gymnasium as gym
 import torch
+import os
+if os.path.basename(os.getcwd()) != 'video-pinball-rl':
+    os.chdir("./video-pinball-rl")
 from agent import DQNAgent
 from dqn import DQN
 import numpy as np

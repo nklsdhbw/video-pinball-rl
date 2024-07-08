@@ -1,5 +1,8 @@
-num_epochs = 1
 
+import os
+if os.path.basename(os.getcwd()) != 'video-pinball-rl':
+    os.chdir("./video-pinball-rl")
+num_epochs = 1
 from baseline import run_baseline
 from models import models
 

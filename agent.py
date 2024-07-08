@@ -1,5 +1,7 @@
 import csv
 import os
+if os.path.basename(os.getcwd()) != 'video-pinball-rl':
+    os.chdir("./video-pinball-rl")
 import math
 import random
 import cv2
