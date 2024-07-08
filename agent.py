@@ -21,7 +21,7 @@ EPS_END = 0.05
 EPS_DECAY = 1000
 TAU = 0.005
 LR = 1e-4
-MEMORY_SIZE = 10000
+MEMORY_SIZE = 50000 
 
 PATH = "."
 
@@ -138,6 +138,9 @@ class DQNAgent:
         self.target_net.load_state_dict(state_dict=target_net_state_dict)
 
     def plot_metrics(self, show_result: bool = False) -> None:
+        # Set the font to Times New Roman
+        plt.rcParams["font.family"] = "Times New Roman"
+
         epochs = list(range(1, len(self.epoch_durations) + 1))
 
         # Plot epoch Durations
@@ -146,12 +149,12 @@ class DQNAgent:
         durations_t = torch.tensor(data=self.epoch_durations, dtype=torch.float)
         plt.xlabel('Epoch')
         plt.ylabel('Duration')
-        plt.plot(epochs, durations_t.numpy())
-        plt.xticks(epochs)  # Set x-ticks to epoch numbers
-        if len(durations_t) >= 100:
-            means = durations_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
-            means = torch.cat((torch.zeros(99), means))
-            plt.plot(epochs, means.numpy())
+        plt.plot(epochs, durations_t.numpy(), label='Duration')
+        if len(durations_t) >= 50:
+            means = durations_t.unfold(dimension=0, size=50, step=1).mean(dim=1).view(-1)
+            means = torch.cat((torch.zeros(49), means))
+            plt.plot(epochs, means.numpy(), label='Moving Average')
+        plt.legend()
         plt.savefig(f'{PATH}/epoch_duration.svg')
         plt.show()
 
@@ -161,12 +164,12 @@ class DQNAgent:
         rewards_t = torch.tensor(data=self.epoch_rewards, dtype=torch.float)
         plt.xlabel('Epoch')
         plt.ylabel('Reward')
-        plt.plot(epochs, rewards_t.numpy())
-        plt.xticks(epochs)  # Set x-ticks to epoch numbers
-        if len(rewards_t) >= 100:
-            means = rewards_t.unfold(dimension=0, size=100, step=1).mean(dim=1).view(-1)
-            means = torch.cat((torch.zeros(99), means))
-            plt.plot(epochs, means.numpy())
+        plt.plot(epochs, rewards_t.numpy(), label='Reward')
+        if len(rewards_t) >= 50:
+            means = rewards_t.unfold(dimension=0, size=50, step=1).mean(dim=1).view(-1)
+            means = torch.cat((torch.zeros(49), means))
+            plt.plot(epochs, means.numpy(), label='Moving Average')
+        plt.legend()
         plt.savefig(f'{PATH}/epoch_reward.svg')
         plt.show()
 
@@ -175,7 +178,8 @@ class DQNAgent:
         plt.title('Loss')
         plt.xlabel('Optimization Step')
         plt.ylabel('Loss')
-        plt.plot(self.losses)
+        plt.plot(self.losses, label='Loss')
+        plt.legend()
         plt.savefig(f'{PATH}/loss.svg')
         plt.show()
 
@@ -184,7 +188,8 @@ class DQNAgent:
         plt.title('Epsilon Decay')
         plt.xlabel('Step')
         plt.ylabel('Epsilon')
-        plt.plot(self.epsilons)
+        plt.plot(self.epsilons, label='Epsilon')
+        plt.legend()
         plt.savefig(f'{PATH}/epsilon_decay.svg')
         plt.show()
 
