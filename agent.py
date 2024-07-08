@@ -1,7 +1,10 @@
 import csv
 import os
+import os
+
 if os.path.basename(os.getcwd()) != 'video-pinball-rl':
     os.chdir("./video-pinball-rl")
+
 import math
 import random
 import cv2
@@ -15,22 +18,10 @@ from dqn import DQN, ReplayMemory, Transition
 import gymnasium as gym
 from typing import Optional
 
-# Hyperparameters
-BATCH_SIZE = 128
-GAMMA = 0.99
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 1000
-TAU = 0.005
-LR = 1e-4
-MEMORY_SIZE = 50000 
-
-PATH = "."
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class DQNAgent:
-    def __init__(self, env: gym.Env) -> None:
+    def __init__(self, env: gym.Env, batch_size: int, gamma: float, eps_start: float, eps_end: float, eps_decay: int, tau: float, lr: float, memory_size: int, path: str) -> None:
         self.env = env
         self.render_mode = env.render_mode
         self.n_actions = env.action_space.n
@@ -42,8 +33,8 @@ class DQNAgent:
         self.target_net.load_state_dict(state_dict=self.policy_net.state_dict())
         self.target_net.eval()
         
-        self.optimizer = optim.AdamW(params=self.policy_net.parameters(), lr=LR, amsgrad=True)
-        self.memory = ReplayMemory(capacity=MEMORY_SIZE)
+        self.optimizer = optim.AdamW(params=self.policy_net.parameters(), lr=lr, amsgrad=True)
+        self.memory = ReplayMemory(capacity=memory_size)
         
         self.steps_done = 0
         self.epoch_durations = []
@@ -51,13 +42,23 @@ class DQNAgent:
         self.losses = []
         self.epsilons = []
 
+        self.batch_size = batch_size
+        self.gamma = gamma
+        self.eps_start = eps_start
+        self.eps_end = eps_end
+        self.eps_decay = eps_decay
+        self.tau = tau
+        self.lr = lr
+        self.memory_size = memory_size
+        self.path = path
+
         # Create directories if not exist
-        os.makedirs(PATH, exist_ok=True)
+        os.makedirs(self.path, exist_ok=True)
         self.metrics_files = {
-            'durations': f'{PATH}/epoch_durations.csv',
-            'rewards': f'{PATH}/epoch_rewards.csv',
-            'losses': f'{PATH}/losses.csv',
-            'epsilons': f'{PATH}/epsilons.csv'
+            'durations': f'{self.path}/epoch_durations.csv',
+            'rewards': f'{self.path}/epoch_rewards.csv',
+            'losses': f'{self.path}/losses.csv',
+            'epsilons': f'{self.path}/epsilons.csv'
         }
         self.initialize_metrics_files()
 
@@ -94,7 +95,7 @@ class DQNAgent:
 
     def select_action(self, state: torch.Tensor) -> torch.Tensor:
         sample = random.random()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * self.steps_done / EPS_DECAY)
+        eps_threshold = self.eps_end + (self.eps_start - self.eps_end) * math.exp(-1. * self.steps_done / self.eps_decay)
         self.steps_done += 1
         self.epsilons.append(eps_threshold)
         if sample > eps_threshold:
@@ -104,9 +105,9 @@ class DQNAgent:
             return torch.tensor([[random.randrange(self.n_actions)]], device=device, dtype=torch.long)
 
     def optimize_model(self) -> None:
-        if len(self.memory) < BATCH_SIZE:
+        if len(self.memory) < self.batch_size:
             return
-        transitions = self.memory.sample(batch_size=BATCH_SIZE)
+        transitions = self.memory.sample(batch_size=self.batch_size)
         batch = Transition(*zip(*transitions))
 
         non_final_mask = torch.tensor(data=tuple(map(lambda s: s is not None, batch.next_state)), device=device, dtype=torch.bool)
@@ -117,10 +118,10 @@ class DQNAgent:
 
         state_action_values = self.policy_net(state_batch).gather(dim=1, index=action_batch)
 
-        next_state_values = torch.zeros(size=(BATCH_SIZE,), device=device)
+        next_state_values = torch.zeros(size=(self.batch_size,), device=device)
         with torch.no_grad():
             next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(dim=1)[0]
-        expected_state_action_values = (next_state_values * GAMMA) + reward_batch
+        expected_state_action_values = (next_state_values * self.gamma) + reward_batch
 
         criterion = nn.SmoothL1Loss()
         loss = criterion(input=state_action_values, target=expected_state_action_values.unsqueeze(1))
@@ -136,7 +137,7 @@ class DQNAgent:
         target_net_state_dict = self.target_net.state_dict()
         policy_net_state_dict = self.policy_net.state_dict()
         for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key] * TAU + target_net_state_dict[key] * (1 - TAU)
+            target_net_state_dict[key] = policy_net_state_dict[key] * self.tau + target_net_state_dict[key] * (1 - self.tau)
         self.target_net.load_state_dict(state_dict=target_net_state_dict)
 
     def plot_metrics(self, show_result: bool = False) -> None:
@@ -157,7 +158,7 @@ class DQNAgent:
             means = torch.cat((torch.zeros(49), means))
             plt.plot(epochs, means.numpy(), label='Moving Average')
         plt.legend()
-        plt.savefig(f'{PATH}/epoch_duration.svg')
+        plt.savefig(f'{self.path}/epoch_duration.svg')
         plt.show()
 
         # Plot epoch Rewards
@@ -172,7 +173,7 @@ class DQNAgent:
             means = torch.cat((torch.zeros(49), means))
             plt.plot(epochs, means.numpy(), label='Moving Average')
         plt.legend()
-        plt.savefig(f'{PATH}/epoch_reward.svg')
+        plt.savefig(f'{self.path}/epoch_reward.svg')
         plt.show()
 
         # Plot Losses
@@ -182,7 +183,7 @@ class DQNAgent:
         plt.ylabel('Loss')
         plt.plot(self.losses, label='Loss')
         plt.legend()
-        plt.savefig(f'{PATH}/loss.svg')
+        plt.savefig(f'{self.path}/loss.svg')
         plt.show()
 
         # Plot Epsilon Decay
@@ -192,7 +193,7 @@ class DQNAgent:
         plt.ylabel('Epsilon')
         plt.plot(self.epsilons, label='Epsilon')
         plt.legend()
-        plt.savefig(f'{PATH}/epsilon_decay.svg')
+        plt.savefig(f'{self.path}/epsilon_decay.svg')
         plt.show()
 
     def run_epoch(self, training: bool = True) -> float:
@@ -239,4 +240,6 @@ class DQNAgent:
             print(f"End Training epoch {i_epoch}/{num_epochs}")
         print('Complete')
         self.plot_metrics(show_result=True)
+        average_loss = np.mean(self.losses)
+        print(f"Average loss over all {num_epochs} training epochs: {average_loss}")
         plt.ioff()
