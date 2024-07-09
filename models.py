@@ -21,7 +21,7 @@ def models(num_epochs) -> None:
     else:
         print("Create an environment and agent...")
         env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
-        agent = DQNAgent(env=env)
+        agent = DQNAgent(env=env, batch_size=128, gamma=0.99, eps_start=0.9, eps_end=0.05, eps_decay=1000, tau=0.0005, lr=1e-4, memory_size=50000, path=".")
         print("Environment and agent successfully created")
         
         # Load the trained model

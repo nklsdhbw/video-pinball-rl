@@ -4,7 +4,6 @@ from typing import Tuple
 
 def run_baseline(num_epochs=3) -> Tuple[int, float]:
     env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
-    num_epochs = 3
     scores = []
 
     for epoch in range(num_epochs):
