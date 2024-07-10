@@ -1,0 +1,22 @@
+\section{Discussion and future work}
+The preprocessing steps implemented, including converting frames to greyscale, cropping to \(84 \times 84\) pixels, and stacking four consecutive frames, have significantly reduced computational costs and improved training efficiency for the Atari Video Pinball environment. However, several limitations are inherent to this approach.
+
+Converting frames to greyscale may lead to the loss of valuable color information that could potentially aid in the game's decision-making process. For instance, certain visual cues that rely on color differentiation are lost, potentially impacting the agent's ability to make informed decisions.
+
+The fixed cropping to \(84 \times 84\) pixels, while reducing dimensionality, may exclude critical parts of the game environment. In Atari Video Pinball, where the entire playing field and paddle positions are essential, this fixed cropping might omit relevant areas, impacting the agent's performance.
+
+Moreover, while stacking four frames helps capture temporal dynamics, it is a simplistic method that may not fully represent the intricate temporal dependencies present in the game. The fixed frame stack size introduces a hyperparameter that requires careful tuning, which was not extensively optimized due to limited computational resources.
+
+Training the model effectively necessitated the use of GPU resources, which were not available locally. Consequently, we utilized Google Colab's NVIDIA TESLA T4 GPU for our computations, but the available resources were constrained by time limits. This constraint necessitated limiting the training to only 500 epochs and precluded extensive hyperparameter tuning, such as grid search. Only the batch size was varied and benchmarked in a brief trial, which may not have identified the optimal hyperparameters for the best performance.
+
+
+
+Future research should focus on addressing these limitations to enhance the performance and efficiency of deep reinforcement learning models for Atari Video Pinball. One potential direction is to explore techniques that selectively incorporate color information, allowing the model to leverage both greyscale and color data where beneficial. 
+
+Adaptive cropping methods could dynamically focus on the most relevant regions of each frame, ensuring that critical areas are retained and important contextual information is preserved. These methods could involve attention mechanisms or saliency detection to identify and prioritize crucial parts of the game environment.
+
+To better capture temporal dependencies, employing more sophisticated architectures such as Long Short-Term Memory (LSTM) networks or Temporal Convolutional Networks (TCNs) could be beneficial. These models can handle longer and more complex temporal sequences beyond the fixed frame stack, potentially improving the agent's understanding of the game's dynamics.
+
+Further research could also explore more nuanced action selection strategies within frame stacks. Predictive models that account for expected changes in the environment over the skipped frames could lead to more accurate and context-aware decision-making.
+
+Lastly, it is crucial to investigate the scalability and generalizability of these methods across a broader range of games and environments. Robust and adaptable models are essential for ensuring that the developed techniques can be effectively applied to various tasks and scenarios. Moreover, securing access to more powerful computational resources for extensive training and hyperparameter optimization could significantly enhance the performance of the reinforcement learning models.
