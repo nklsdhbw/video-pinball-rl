@@ -143,11 +143,24 @@ To run this project, you'll need Python and the required dependencies. You can i
 
 If you're using Windows then run
 
-	source nlp\Scripts\activate
+	source atari\Scripts\activate
 
 If you're using MacOS or Linux then run
 
-	source nlp/bin/activate
+	source atari/bin/activate
 Now install all the required packages from `requirements.txt` by running
 	
 	pip install -r requirements.txt
+
+#### Training
+<b> Warning!</b> Running this script will override the current model and their corresponding files and plots. 
+
+First set the hyperparamters in `train.py`
+Then execute the script via the following command
+
+	python train.py
+The plots, the underlying csv-files for the epsilon decay, the episode rewards & durations and the losses as well as the final DQN model are automatically generated and saved.
+#### Comparison
+To compare the results of the Baseline method with the Double DQN, you'll need to train it first. When this step is done, run the following command
+
+	python comparison.py
