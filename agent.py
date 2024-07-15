@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from dqn import DQN, ReplayMemory, Transition
 import gymnasium as gym
 from typing import Optional
+import csv
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

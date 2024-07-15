@@ -4,11 +4,10 @@ import os
 if os.path.basename(os.getcwd()) != 'video-pinball-rl':
     os.chdir("./video-pinball-rl")
 from agent import DQNAgent
-from dqn import DQN
 import numpy as np
 from itertools import count
 import os
-from typing import List, Optional, Tuple
+from typing import List
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
