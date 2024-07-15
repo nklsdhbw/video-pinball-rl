@@ -1,0 +1,82 @@
+%%%%%%%%%%%%%%%%%%%%%%% file template.tex %%%%%%%%%%%%%%%%%%%%%%%%%
+% $Id: woc_2col.tex 158 2017-01-19 23:08:23Z foley $
+% $URL: https://repository.cs.ru.is/svn/template/tvd/journal/matec-woc/woc_2col.tex $
+% 
+% This is a template file for Web of Conferences Journal
+%
+% Copy it to a new file with a new name and use it as the basis
+% for your article
+%
+% This template has been updated to match the Word Template's contents
+% by Joseph T. Foley < foley AT RU dot IS >
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%% EDP Science %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%%%\documentclass[option]{webofc}
+%%% "twocolumn" for typesetting an article in two columns format (default one column)
+%
+\documentclass[twocolumn]{webofc}
+\usepackage[varg]{txfonts}   % Web of Conferences font
+\usepackage{booktabs}
+\usepackage{array} %% needed for advanced table manipulation
+%% Column types from http://tex.stackexchange.com/questions/54069/table-with-text-wrapping
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\graphicspath{{graphics/}{graphics/arch/}{Graphics/}{./}} % Look in these folders for graphics
+%
+% Put here some packages required or/and some personnal commands
+\usepackage{svg}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{comment}
+\usepackage{hyperref}
+\usepackage{varioref}
+%
+%
+\begin{document}
+%
+\title{Implementing Double DQN for Autonomous Control in Atari Video Pinball}
+%
+% subtitle is optionnal
+%
+%%%\subtitle{Do you have a subtitle?\\ If so, write it here}
+
+\author{\firstname{Luca} \lastname{Mohr}\inst{1}\and
+        \firstname{Christian} \lastname{Schmid}\inst{1}\and
+        \firstname{Niklas} \lastname{Scholz}\inst{1}
+        % etc.
+      }
+
+\institute{Baden-Wuerttemberg Cooperative State University Mannheim, Facility of economics, 68163 Coblitzallee 1-9, Germany
+          }
+
+\abstract{
+In this paper, we present an approach to train an agent to play the Atari Video Pinball game using Deep Q-Networks (DQN), a popular reinforcement learning algorithm. DQN leverages deep learning to approximate Q-values, which represent the expected future rewards of taking actions in particular states. We preprocess the game frames, employ an epsilon-greedy strategy for action selection, and utilize a replay memory to store and sample experiences for training. Our results demonstrate the agent's capability to learn effective policies through iterative interaction with the game environment. We discuss the training process, challenges encountered, and potential improvements. This study contributes to the field of reinforcement learning by providing insights into the application of DQN in complex environments like Atari games.
+%
+  %You should leave 8 mm of space above the abstract and 10 mm after the abstract.
+  %The heading Abstract should be typed in bold 9-point Times.
+  %The body of the abstract should be typed in normal 9-point Arial in a single paragraph, immediately following the heading.
+  %The text should be set to 1 line spacing.
+  %The abstract should be centred across the page, indented 17 mm from the left and right page margins and justified.
+  %It should not normally exceed 200 words.
+}
+%
+\maketitle
+%
+\input{introduction}
+
+\input{related_work}
+
+\input{methodology}
+%\subsection{Comparison}
+\input{comparison}
+
+\input{discussion}
+
+
+
+\bibliography{references}
+\end{document}

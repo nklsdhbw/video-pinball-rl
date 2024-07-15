@@ -120,7 +120,7 @@ Where:
 
   
 
-## ## 🚀 Getting started
+## 🚀 Getting started
 
 ### 🐍 Python
 
