@@ -230,11 +230,9 @@ To run this project, you'll need Python and the required dependencies. You can i
 
   
 
-  
-  
-  
-
 	python3.11 -m venv atari
+
+  
 
   
 
@@ -254,7 +252,9 @@ If you're using MacOS or Linux then run
 
 Now install all the required packages from `requirements.txt` by running
 
+
 	pip install -r requirements.txt
+
 
   
 
