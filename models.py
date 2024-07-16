@@ -11,7 +11,7 @@ from typing import List
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def models(num_epochs) -> None:
+def models(num_epochs=3) -> None:
     files = os.listdir()
     if "dqn_model.pth" not in files:
         print("Model not found. Please train the model first via 'python train.py'")
