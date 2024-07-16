@@ -11,7 +11,7 @@ from typing import List
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def models(num_epochs=3) -> None:
+def models(num_epochs=3, render_mode="rgb_array") -> None:
     files = os.listdir()
     if "dqn_model.pth" not in files:
         print("Model not found. Please train the model first via 'python train.py'")
@@ -19,7 +19,7 @@ def models(num_epochs=3) -> None:
         return
     else:
         print("Create an environment and agent...")
-        env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array")
+        env = gym.make("ALE/VideoPinball-v5", render_mode=render_mode)
         agent = DQNAgent(env=env, batch_size=128, gamma=0.99, eps_start=0.9, eps_end=0.05, eps_decay=1000, tau=0.0005, lr=1e-4, memory_size=50000, path=".")
         print("Environment and agent successfully created")
         
@@ -66,4 +66,4 @@ def models(num_epochs=3) -> None:
         print("Exiting...")
         return num_epochs, average_score
 if __name__ == "__main__":
-    models()
+    models(num_epochs=3, render_mode="human")
